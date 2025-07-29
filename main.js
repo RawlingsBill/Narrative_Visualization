@@ -25,9 +25,12 @@ async function scene1() {
   const isoMap = new Map(emissions.map(d => [d.iso, d.emissions]));
   console.log("Sample emission (USA):", isoMap.get("USA"));
 
-  // Create ISO lookup map
-  const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
-  const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso_a3]));
+  // Load country ISO mappings from the world-country-names.tsv
+  const countryISO = await d3.tsv("world-country-names.tsv");
+  console.log(countryISO.slice(0, 5));  // Log first 5 rows to check the format
+
+  // Create a map for country ID -> ISO code lookup
+  const idToISO = new Map(countryISO.map(d => [parseInt(d.id, 10), d.iso_a3]));
   console.log("ISO lookup for 840 (USA):", idToISO.get(840));
 
   // Set up the map projection
@@ -49,8 +52,11 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const iso = idToISO.get(+d.id); // Look up the ISO code for each country
-      const value = isoMap.get(iso);  // Get the emissions value for the country
+      const iso = idToISO.get(+d.id);  // Look up the ISO code for each country
+      const value = isoMap.get(iso);   // Get the emissions value for the country
+      if (!iso) {
+        console.warn(`No ISO code found for Country ID: ${d.id}`);
+      }
       console.log(`Country ID ${d.id} → ISO ${iso} → Emissions ${value}`);
       return value != null ? color(value) : "#ccc";  // Use the emissions color or gray out if no data
     })
