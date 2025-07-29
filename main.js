@@ -52,17 +52,30 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const iso = idToISO.get(parseInt(d.id, 10));  // Normalize TopoJSON ID to integer
-      const value = isoMap.get(iso);
+      const countryId = parseInt(d.id, 10);  // Convert TopoJSON id to integer
+      if (countryId < 0) {
+        // Skip negative IDs (like Northern Cyprus, Kosovo, etc.)
+        return "#ccc";  // Use a neutral color for these cases
+      }
+
+      const iso = idToISO.get(countryId);  // Look up the ISO code from the map
+      const value = isoMap.get(iso);   // Get the emissions value for the country
       console.log(`Country ID ${d.id} → ISO ${iso} → Emissions ${value}`);
+
       return value != null ? color(value) : "#ccc";  // Gray out if no data
     })
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
-      const iso = idToISO.get(parseInt(d.id, 10));  // Normalize TopoJSON ID to integer
-      const value = isoMap.get(iso);
+      const countryId = parseInt(d.id, 10);  // Convert TopoJSON id to integer
+      if (countryId < 0) {
+        // Skip negative IDs for tooltip as well
+        return "No data";  // Handle negative IDs gracefully
+      }
+
+      const iso = idToISO.get(countryId);  // Get the ISO code
+      const value = isoMap.get(iso);   // Get the emissions value
       return `${iso ?? "Unknown"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
