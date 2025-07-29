@@ -28,7 +28,7 @@ async function scene1() {
   const countries = topojson.feature(world, world.objects.countries).features;
 
   const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
-  const idToISO = new Map(countryISO.map(d => [d.id, d.iso_a3]));
+  const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
 
   const projection = d3.geoMercator()
     .scale(120)
@@ -46,10 +46,11 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-  const iso = idToISO.get(String(d.id));
-  const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
-  if (iso === "USA") return "red";
-  return "#ccc";
+  const iso = idToISO.get(String(d.id));    
+  const value = isoMap.get(iso);            
+  console.log(d.id, iso, value);            
+  return value != null ? color(value) : "#ccc";
+});
     });
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
@@ -58,7 +59,7 @@ async function scene1() {
       const iso = idToISO.get(d.id);
       const value = isoMap.get(iso);
       console.log(d.id, iso, value);
-      console.log("USA is mapped to:", idToISO.get("840"));  // Should say "USA"
+      console.log("USA is mapped to:", idToISO.get("840"));  
       return `${iso ?? "?"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
