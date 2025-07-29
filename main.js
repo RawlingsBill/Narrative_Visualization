@@ -17,17 +17,22 @@ async function scene1() {
   const height = +svg.attr("height");
 
   const world = await d3.json("world-110m.json");
+
   const emissions = await d3.csv("emissions.csv", d => ({
     iso: d.iso_a3,
     emissions: +d.emissions
   }));
 
-  const emissionMap = new Map(emissions.map(d => [d.iso, d.emissions]));
+  const isoMap = new Map(emissions.map(d => [d.iso, d.emissions]));
 
   const countries = topojson.feature(world, world.objects.countries).features;
-  
+
+  // Map numeric id to ISO using a known country code list
+  const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
+  const idToISO = new Map(countryISO.map(d => [d.id, d.iso_a3]));
+
   const projection = d3.geoMercator()
-    .scale(120) 
+    .scale(120)
     .translate([width / 2, height / 1.5]);
 
   const path = d3.geoPath().projection(projection);
@@ -42,15 +47,17 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const value = emissionMap.get(d.id);
+      const iso = idToISO.get(d.id); // map numeric ID to ISO A3
+      const value = isoMap.get(iso);
       return value != null ? color(value) : "#ccc";
     })
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
-      const value = emissionMap.get(d.id);
-      return `${d.id}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
+      const iso = idToISO.get(d.id);
+      const value = isoMap.get(iso);
+      return `${iso ?? "?"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
 function scene2() {
