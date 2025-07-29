@@ -18,7 +18,7 @@ async function scene1() {
 
   const world = await d3.json("world-110m.json");
 
-  const emissions = await d3.csv("world_emissions.csv", d => ({
+  const emissions = await d3.csv("emissions.csv", d => ({
     iso: d.iso_a3,
     emissions: +d.emissions
   }));
@@ -27,7 +27,6 @@ async function scene1() {
 
   const countries = topojson.feature(world, world.objects.countries).features;
 
-  // Map numeric id to ISO using a known country code list
   const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
   const idToISO = new Map(countryISO.map(d => [d.id, d.iso_a3]));
 
