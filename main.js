@@ -16,22 +16,24 @@ async function scene1() {
   const width = +svg.attr("width");
   const height = +svg.attr("height");
 
+
   const world = await d3.json("world-110m.json");
+  const countries = topojson.feature(world, world.objects.countries).features;
+  console.log("Loaded countries:", countries.length);
+
 
   const emissions = await d3.csv("emissions.csv", d => ({
     iso: d.iso_a3,
     emissions: +d.emissions
   }));
-
   const isoMap = new Map(emissions.map(d => [d.iso, d.emissions]));
+  console.log("Sample emission (USA):", isoMap.get("USA"));
 
-  const countries = topojson.feature(world, world.objects.countries).features;
 
   const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
-  console.log("Loaded countryISO", countryISO);
-  const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
-  console.log("USA is:", idToISO.get("840"));
-  const iso = idToISO.get(+d.id); 
+  const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso_a3]));
+  console.log("ISO lookup for 840 (USA):", idToISO.get(840));
+
 
   const projection = d3.geoMercator()
     .scale(120)
@@ -39,31 +41,30 @@ async function scene1() {
 
   const path = d3.geoPath().projection(projection);
 
+
   const color = d3.scaleSequential()
     .domain([0, d3.max(emissions, d => d.emissions)])
     .interpolator(d3.interpolateReds);
+
 
   svg.append("g")
     .selectAll("path")
     .data(countries)
     .join("path")
     .attr("d", path)
-    .attr("fill", d => {  
-  const value = isoMap.get(iso);            
-  console.log(d.id, iso, value);            
-  return value != null ? color(value) : "#ccc";
-  console.log("Raw d.id:", d.id, "typeof:", typeof d.id);
-});
-    });
+    .attr("fill", d => {
+      const iso = idToISO.get(+d.id); 
+      const value = isoMap.get(iso);
+      console.log(`Country ID ${d.id} → ISO ${iso} → Emissions ${value}`);
+      return value != null ? color(value) : "#ccc";
+    })
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
-      const iso = idToISO.get(d.id);
+      const iso = idToISO.get(+d.id);
       const value = isoMap.get(iso);
-      console.log(d.id, iso, value);
-      console.log("USA is mapped to:", idToISO.get("840"));  
-      return `${iso ?? "?"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
+      return `${iso ?? "Unknown"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
 function scene2() {
