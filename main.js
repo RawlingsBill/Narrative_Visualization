@@ -31,7 +31,6 @@ async function scene1() {
   console.log("Loaded countryISO", countryISO);
   const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
   console.log("USA is:", idToISO.get("840"));
-  const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso_a3]));
   const iso = idToISO.get(+d.id); 
 
   const projection = d3.geoMercator()
@@ -49,8 +48,7 @@ async function scene1() {
     .data(countries)
     .join("path")
     .attr("d", path)
-    .attr("fill", d => {
-  const iso = idToISO.get(String(d.id));    
+    .attr("fill", d => {  
   const value = isoMap.get(iso);            
   console.log(d.id, iso, value);            
   return value != null ? color(value) : "#ccc";
