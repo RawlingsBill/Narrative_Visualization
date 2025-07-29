@@ -48,6 +48,8 @@ async function scene1() {
     .attr("fill", d => {
       const iso = idToISO.get(d.id); // map numeric ID to ISO A3
       const value = isoMap.get(iso);
+      if (iso === "USA") return "red";
+  return "#ccc";
       return value != null ? color(value) : "#ccc";
     })
     .attr("stroke", "#fff")
@@ -56,6 +58,7 @@ async function scene1() {
     .text(d => {
       const iso = idToISO.get(d.id);
       const value = isoMap.get(iso);
+      console.log(d.id, iso, value);
       return `${iso ?? "?"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
