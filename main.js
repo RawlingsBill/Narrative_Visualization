@@ -9,16 +9,40 @@ function clearScene() {
   svg.selectAll("*").remove();
 }
 
-function scene1() {
+async function scene1() {
   clearScene();
-  d3.select("#subtitle").text("Scene 1: Overview of Global CO2 Emissions");
-  // Mock visualization - add your world map or similar here
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", height / 2)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "24px")
-    .text("[Map showing emissions by country]");
+  d3.select("#subtitle").text("Scene 1: Overview of Global CO₂ Emissions");
+
+  const path = d3.geoPath();
+  const world = await d3.json("world-110m.json");
+  const emissions = await d3.csv("emissions.csv", d => ({
+    iso: d.iso_a3,
+    emissions: +d.emissions
+  }));
+
+  const emissionMap = new Map(emissions.map(d => [d.iso, d.emissions]));
+
+  const countries = topojson.feature(world, world.objects.countries).features;
+
+  const color = d3.scaleSequential()
+    .domain([0, d3.max(emissions, d => d.emissions)])
+    .interpolator(d3.interpolateReds);
+
+  svg.append("g")
+    .selectAll("path")
+    .data(countries)
+    .join("path")
+    .attr("d", path)
+    .attr("fill", d => {
+      const value = emissionMap.get(d.id);
+      return value != null ? color(value) : "#ccc";
+    })
+    .attr("stroke", "#fff")
+    .append("title")
+    .text(d => {
+      const value = emissionMap.get(d.id);
+      return `${d.id}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
+    });
 }
 
 function scene2() {
