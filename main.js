@@ -18,7 +18,7 @@ async function scene1() {
 
   const world = await d3.json("world-110m.json");
 
-  const emissions = await d3.csv("emissions.csv", d => ({
+  const emissions = await d3.csv("world_emissions.csv", d => ({
     iso: d.iso_a3,
     emissions: +d.emissions
   }));
