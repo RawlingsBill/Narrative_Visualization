@@ -1,1 +1,28 @@
-<h1>Hi There</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global CO2 Emissions</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/d3-annotation@2.5.1/d3-annotation.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="title">
+      <h1>Global CO2 Emissions</h1>
+      <p id="subtitle">A narrative exploration of emissions across countries</p>
+    </div>
+
+    <div id="controls">
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+    </div>
+
+    <svg id="viz" width="800" height="600"></svg>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
