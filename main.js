@@ -13,16 +13,24 @@ async function scene1() {
   clearScene();
   d3.select("#subtitle").text("Scene 1: Overview of Global CO₂ Emissions");
 
-  const path = d3.geoPath();
+  const width = +svg.attr("width");
+  const height = +svg.attr("height");
+
   const world = await d3.json("world-110m.json");
   const emissions = await d3.csv("emissions.csv", d => ({
-  iso: d.iso_a3,
-  emissions: +d.emissions
-}));
+    iso: d.iso_a3,
+    emissions: +d.emissions
+  }));
 
   const emissionMap = new Map(emissions.map(d => [d.iso, d.emissions]));
 
   const countries = topojson.feature(world, world.objects.countries).features;
+  
+  const projection = d3.geoMercator()
+    .scale(120) 
+    .translate([width / 2, height / 1.5]);
+
+  const path = d3.geoPath().projection(projection);
 
   const color = d3.scaleSequential()
     .domain([0, d3.max(emissions, d => d.emissions)])
@@ -38,13 +46,13 @@ async function scene1() {
       return value != null ? color(value) : "#ccc";
     })
     .attr("stroke", "#fff")
+    .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
       const value = emissionMap.get(d.id);
       return `${d.id}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
-
 function scene2() {
   clearScene();
   d3.select("#subtitle").text("Scene 2: Emissions Over Time");
