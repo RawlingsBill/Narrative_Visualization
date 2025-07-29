@@ -29,8 +29,8 @@ async function scene1() {
   const countryISO = await d3.tsv("world-country-names.tsv");
   console.log(countryISO.slice(0, 5));  // Log first 5 rows to check the format
 
-  // Create a map for country ID -> ISO code lookup
-  const idToISO = new Map(countryISO.map(d => [parseInt(d.id, 10), d.iso_a3]));
+  // Create a map for country ID -> ISO code lookup (normalize the IDs to integers)
+  const idToISO = new Map(countryISO.map(d => [parseInt(d.id, 10), d.iso_a3]));  // Convert id to integer
   console.log("ISO lookup for 840 (USA):", idToISO.get(840));
 
   // Set up the map projection
@@ -52,20 +52,17 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const iso = idToISO.get(+d.id);  // Look up the ISO code for each country
-      const value = isoMap.get(iso);   // Get the emissions value for the country
-      if (!iso) {
-        console.warn(`No ISO code found for Country ID: ${d.id}`);
-      }
+      const iso = idToISO.get(parseInt(d.id, 10));  // Normalize TopoJSON ID to integer
+      const value = isoMap.get(iso);
       console.log(`Country ID ${d.id} → ISO ${iso} → Emissions ${value}`);
-      return value != null ? color(value) : "#ccc";  // Use the emissions color or gray out if no data
+      return value != null ? color(value) : "#ccc";  // Gray out if no data
     })
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
-      const iso = idToISO.get(+d.id);  // Get the ISO code
-      const value = isoMap.get(iso);   // Get the emissions value
+      const iso = idToISO.get(parseInt(d.id, 10));  // Normalize TopoJSON ID to integer
+      const value = isoMap.get(iso);
       return `${iso ?? "Unknown"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
