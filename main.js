@@ -46,12 +46,11 @@ async function scene1() {
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const iso = idToISO.get(d.id); // map numeric ID to ISO A3
-      const value = isoMap.get(iso);
-      if (iso === "USA") return "red";
+  const iso = idToISO.get(String(d.id));
+  const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
+  if (iso === "USA") return "red";
   return "#ccc";
-      return value != null ? color(value) : "#ccc";
-    })
+    });
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
@@ -59,6 +58,7 @@ async function scene1() {
       const iso = idToISO.get(d.id);
       const value = isoMap.get(iso);
       console.log(d.id, iso, value);
+      console.log("USA is mapped to:", idToISO.get("840"));  // Should say "USA"
       return `${iso ?? "?"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
