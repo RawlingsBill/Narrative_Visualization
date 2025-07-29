@@ -28,7 +28,11 @@ async function scene1() {
   const countries = topojson.feature(world, world.objects.countries).features;
 
   const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
+  console.log("Loaded countryISO", countryISO);
   const idToISO = new Map(countryISO.map(d => [String(d.id), d.iso_a3]));
+  console.log("USA is:", idToISO.get("840"));
+  const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso_a3]));
+  const iso = idToISO.get(+d.id); 
 
   const projection = d3.geoMercator()
     .scale(120)
@@ -50,6 +54,7 @@ async function scene1() {
   const value = isoMap.get(iso);            
   console.log(d.id, iso, value);            
   return value != null ? color(value) : "#ccc";
+  console.log("Raw d.id:", d.id, "typeof:", typeof d.id);
 });
     });
     .attr("stroke", "#fff")
