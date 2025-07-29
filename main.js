@@ -13,14 +13,10 @@ async function scene1() {
   clearScene();
   d3.select("#subtitle").text("Scene 1: Overview of Global CO₂ Emissions");
 
-  const width = +svg.attr("width");
-  const height = +svg.attr("height");
-
-
+  // Load the world map and emission data
   const world = await d3.json("world-110m.json");
   const countries = topojson.feature(world, world.objects.countries).features;
   console.log("Loaded countries:", countries.length);
-
 
   const emissions = await d3.csv("emissions.csv", d => ({
     iso: d.iso_a3,
@@ -29,41 +25,41 @@ async function scene1() {
   const isoMap = new Map(emissions.map(d => [d.iso, d.emissions]));
   console.log("Sample emission (USA):", isoMap.get("USA"));
 
-
+  // Create ISO lookup map
   const countryISO = await d3.tsv("https://gist.githubusercontent.com/mbostock/4090846/raw/world-country-names.tsv");
   const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso_a3]));
   console.log("ISO lookup for 840 (USA):", idToISO.get(840));
 
-
+  // Set up the map projection
   const projection = d3.geoMercator()
     .scale(120)
     .translate([width / 2, height / 1.5]);
 
   const path = d3.geoPath().projection(projection);
 
-
+  // Define color scale based on emissions
   const color = d3.scaleSequential()
     .domain([0, d3.max(emissions, d => d.emissions)])
     .interpolator(d3.interpolateReds);
 
-
+  // Draw the countries on the map
   svg.append("g")
     .selectAll("path")
     .data(countries)
     .join("path")
     .attr("d", path)
     .attr("fill", d => {
-      const iso = idToISO.get(+d.id); 
-      const value = isoMap.get(iso);
+      const iso = idToISO.get(+d.id); // Look up the ISO code for each country
+      const value = isoMap.get(iso);  // Get the emissions value for the country
       console.log(`Country ID ${d.id} → ISO ${iso} → Emissions ${value}`);
-      return value != null ? color(value) : "#ccc";
+      return value != null ? color(value) : "#ccc";  // Use the emissions color or gray out if no data
     })
     .attr("stroke", "#fff")
     .attr("stroke-width", 0.5)
     .append("title")
     .text(d => {
-      const iso = idToISO.get(+d.id);
-      const value = isoMap.get(iso);
+      const iso = idToISO.get(+d.id);  // Get the ISO code
+      const value = isoMap.get(iso);   // Get the emissions value
       return `${iso ?? "Unknown"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
     });
 }
