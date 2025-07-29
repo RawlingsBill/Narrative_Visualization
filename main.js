@@ -15,10 +15,10 @@ async function scene1() {
 
   const path = d3.geoPath();
   const world = await d3.json("world-110m.json");
-  const emissions = await d3.csv("world_emissions.csv", d => ({
-    iso: d.iso_a3,
-    emissions: +d.emissions
-  }));
+  const emissions = await d3.csv("emissions.csv", d => ({
+  iso: d.iso_a3,
+  emissions: +d.emissions
+}));
 
   const emissionMap = new Map(emissions.map(d => [d.iso, d.emissions]));
 
