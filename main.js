@@ -26,11 +26,11 @@ async function scene1() {
   console.log("Sample emission (USA):", isoMap.get("USA"));
 
   // Load country ISO mappings from the world-country-names.tsv
-  const countryISO = await d3.tsv("world-country-names.tsv");
+  const countryISO = await d3.tsv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_country_iso3.tsv");
   console.log(countryISO.slice(0, 5));  // Log first 5 rows to check the format
 
   // Create a map for country ID -> ISO code lookup (normalize the IDs to integers)
-  const idToISO = new Map(countryISO.map(d => [parseInt(d.id, 10), d.iso_a3]));  // Convert id to integer
+  const idToISO = new Map(countryISO.map(d => [parseInt(d.id), d.iso3]));
   console.log("ISO lookup for 840 (USA):", idToISO.get(840));
 
   // Set up the map projection
