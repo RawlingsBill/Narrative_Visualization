@@ -23,6 +23,7 @@ async function scene1() {
       d3.json("state_gdp_2024.json")
     ]);
 
+
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
 
     // Optional debugging: find missing states
@@ -40,7 +41,7 @@ async function scene1() {
 
     svg.append("g")
       .selectAll("path")
-      .data(us.features)
+      .data(us.features.filter(d => d.properties.name !== "Virginia"))
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
