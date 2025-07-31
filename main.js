@@ -26,6 +26,10 @@ async function scene1() {
   const virginia = us.features.find(d => d.properties.name === "Virginia");
   console.log(virginia);
 
+  const virginia = us.features.find(d => d.properties.name === "Virginia");
+  console.log("Virginia geometry type:", virginia.geometry.type);
+  console.log("Virginia coordinates sample:", virginia.geometry.coordinates[0][0]);
+
   const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
 
   const color = d3.scaleSequential()
