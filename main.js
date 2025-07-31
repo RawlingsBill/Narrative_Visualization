@@ -59,26 +59,5 @@ async function scene1() {
   }
 }
 
-// Scene 2: State Industry Breakdown (placeholder)
-async function scene2(stateName) {
-  clearScene();
-  d3.select("h2").text(`Scene 2: Industry Breakdown for ${stateName}`);
-  // TODO: Add stacked area/bar chart
-}
-
-// Scene 3: Compare States (placeholder)
-async function scene3() {
-  clearScene();
-  d3.select("h2").text("Scene 3: Compare States");
-  // TODO: Add small multiples chart
-}
-
-// Scene 4: Unique Economies (placeholder)
-async function scene4() {
-  clearScene();
-  d3.select("h2").text("Scene 4: Unique Economies Highlights");
-  // TODO: Add featured stories
-}
-
 // Start with Scene 1
 scene1();
