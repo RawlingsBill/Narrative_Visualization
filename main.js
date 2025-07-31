@@ -18,10 +18,11 @@ async function scene1() {
   clearScene();
   d3.select("h2").text("Scene 1: U.S. State GDP in 2024");
 
-  const [us, gdpData] = await Promise.all([
-    d3.json("https://gist.githubusercontent.com/mbostock/4090846/raw/us-states.json"),
-    d3.json("state_gdp_2024.json")
+  const [usTopo, gdpData] = await Promise.all([
+  d3.json("https://d3js.org/us-10m.v1.json"),
+  d3.json("state_gdp_2024.json")
 ]);
+const us = topojson.feature(usTopo, usTopo.objects.states);
 
   const virginia = us.features.find(d => d.properties.name === "Virginia");
   console.log("Virginia geometry type:", virginia.geometry.type);
