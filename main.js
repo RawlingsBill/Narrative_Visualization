@@ -27,7 +27,10 @@ async function scene1() {
       .scale(1000)
       .translate([width / 2, height / 2]);
 
-    const gdpMap = new Map(gdpData.map(d => [d.state, d.gdp_2024]));
+    const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
+    const stateName = d.properties.name.trim();
+    const gdp = gdpMap.get(stateName);
+    console.log(d.properties.name, gdpMap.get(d.properties.name));
 
     const color = d3.scaleSequential()
       .domain([0, d3.max(gdpData, d => d.gdp_2024)])
