@@ -23,6 +23,9 @@ async function scene1() {
     d3.json("state_gdp_2024.json")
   ]);
 
+  const virginia = us.features.find(d => d.properties.name === "Virginia");
+  console.log(virginia);
+
   const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
 
   const color = d3.scaleSequential()
