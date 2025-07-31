@@ -1,47 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>U.S. State GDP Choropleth (2024)</title>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<style>
-  body { font-family: sans-serif; }
-  svg { border: 1px solid #ccc; }
-  .tooltip {
-    position: absolute;
-    padding: 6px 8px;
-    background: white;
-    border: 1px solid #999;
-    pointer-events: none;
-    font-size: 13px;
-    border-radius: 4px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>US GDP by State</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    svg {
+      width: 960px;
+      height: 600px;
+      display: block;
+      margin: auto;
+    }
+    #back-button {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
-
-<h2>Scene 1: U.S. State GDP in 2024</h2>
-<svg width="960" height="600"></svg>
-<button id="back-button" style="display:none; margin-bottom: 1rem;">⬅ Back to Map</button>
-<svg></svg>
-<div class="tooltip" style="position:absolute; background:white; padding:6px; border:1px solid #ccc; pointer-events:none; opacity:0;"></div>
-<div class="tooltip" style="
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 5px;
-  font-size: 12px;
-  border-radius: 4px;
-"></div>
-  
-<script src="https://unpkg.com/topojson-client@3"></script>
-
-<script src="main.js"></script>
+  <h2 style="text-align: center">Scene 1: U.S. State GDP in 2024</h2>
+  <svg></svg>
+  <div class="tooltip"></div>
+  <button id="back-button">Back to Map</button>
+  <script src="main.js"></script>
 </body>
 </html>
