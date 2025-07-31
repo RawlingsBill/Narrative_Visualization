@@ -32,6 +32,15 @@ async function scene1() {
     const gdp = gdpMap.get(stateName);
     console.log(d.properties.name, gdpMap.get(d.properties.name));
 
+    const gdpStates = new Set(gdpData.map(d => d.state.trim()));
+    const geoStates = new Set(us.features.map(d => d.properties.name.trim()));
+
+    for (let state of geoStates) {
+      if (!gdpStates.has(state)) {
+        console.warn(`No GDP data for: ${state}`);
+  }
+}
+
     const color = d3.scaleSequential()
       .domain([0, d3.max(gdpData, d => d.gdp_2024)])
       .interpolator(d3.interpolateBlues);
