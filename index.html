@@ -1,29 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Global CO2 Emissions</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://unpkg.com/d3-annotation@2.5.1/d3-annotation.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>U.S. State GDP Choropleth (2024)</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  body { font-family: sans-serif; }
+  svg { border: 1px solid #ccc; }
+  .tooltip {
+    position: absolute;
+    padding: 6px 8px;
+    background: white;
+    border: 1px solid #999;
+    pointer-events: none;
+    font-size: 13px;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+</style>
 </head>
 <body>
-  <div id="container">
-    <div id="title">
-      <h1>Global CO2 Emissions</h1>
-      <p id="subtitle">A narrative exploration of emissions across countries</p>
-    </div>
 
-    <div id="controls">
-      <button id="prevBtn">Previous</button>
-      <button id="nextBtn">Next</button>
-    </div>
+<h2>Scene 1: U.S. State GDP in 2024</h2>
+<svg width="960" height="600"></svg>
+<div class="tooltip"></div>
 
-    <svg id="viz" width="800" height="600"></svg>
-  </div>
+<script>
+const width = 960, height = 600;
 
-  <script src="main.js"></script>
-  <script src="https://unpkg.com/topojson-client@3"></script>
+const svg = d3.select("svg");
+const tooltip = d3.select(".tooltip");
+
+const projection = d3.geoAlbersUsa()
+  .scale(1000)
+  .translate([width / 2, height / 2]);
+const path = d3.geoPath(projection);
+
+Promise.all([
+  d3.json("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"),
+  d3.json("state_gdp_2024.json")  
+]).then(([us, gdpData]) => {
+  const gdpMap = new Map(gdpData.map(d => [d.state, d.gdp_2024]));
+
+  const color = d3.scaleSequential()
+    .domain([0, d3.max(gdpData, d => d.gdp_2024)])
+    .interpolator(d3.interpolateBlues);
+
+  svg.append("g")
+    .selectAll("path")
+    .data(us.features)
+    .join("path")
+    .attr("d", path)
+    .attr("fill", d => {
+      const gdp = gdpMap.get(d.properties.name);
+      return gdp ? color(gdp) : "#eee";
+    })
+    .attr("stroke", "#999")
+    .on("mousemove", (event, d) => {
+      const gdp = gdpMap.get(d.properties.name);
+      tooltip
+        .style("opacity", 1)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY + 10) + "px")
+        .html(`
+          <strong>${d.properties.name}</strong><br/>
+          GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
+        `);
+    })
+    .on("mouseout", () => {
+      tooltip.style("opacity", 0);
+    });
+}).catch(err => {
+  console.error("Error loading files:", err);
+});
+</script>
+
 </body>
 </html>
