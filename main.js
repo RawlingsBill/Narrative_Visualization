@@ -18,10 +18,8 @@ async function scene1() {
   d3.select("h2").text("Scene 1: U.S. State GDP in 2024");
 
   try {
-    const [us, gdpData] = await Promise.all([
-      d3.json("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"),
-      d3.json("state_gdp_2024.json")
-    ]);
+    const usTopo = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+    const us = topojson.feature(usTopo, usTopo.objects.states);
 
 
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
