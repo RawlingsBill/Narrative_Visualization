@@ -23,23 +23,16 @@ async function scene1() {
       d3.json("state_gdp_2024.json")
     ]);
 
-    const projection = d3.geoAlbersUsa()
-      .scale(1000)
-      .translate([width / 2, height / 2]);
-
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
-    const stateName = d.properties.name.trim();
-    const gdp = gdpMap.get(stateName);
-    console.log(d.properties.name, gdpMap.get(d.properties.name));
 
+    // Optional debugging: find missing states
     const gdpStates = new Set(gdpData.map(d => d.state.trim()));
     const geoStates = new Set(us.features.map(d => d.properties.name.trim()));
-
     for (let state of geoStates) {
       if (!gdpStates.has(state)) {
         console.warn(`No GDP data for: ${state}`);
-  }
-}
+      }
+    }
 
     const color = d3.scaleSequential()
       .domain([0, d3.max(gdpData, d => d.gdp_2024)])
@@ -51,7 +44,7 @@ async function scene1() {
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
-        const gdp = gdpMap.get(d.properties.name);
+        const gdp = gdpMap.get(d.properties.name.trim());
         return gdp ? color(gdp) : "#eee";
       })
       .attr("stroke", "#999")
@@ -66,7 +59,6 @@ async function scene1() {
             GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
           `);
       })
-
       .on("mouseout", () => {
         tooltip.style("opacity", 0);
       });
