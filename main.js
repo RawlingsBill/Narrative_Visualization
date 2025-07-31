@@ -3,6 +3,22 @@ const svg = d3.select("svg");
 const tooltip = d3.select(".tooltip");
 const backButton = d3.select("#back-button");
 
+// Add this to map state FIPS to names
+const stateNameMap = new Map([
+  [1, "Alabama"], [2, "Alaska"], [4, "Arizona"], [5, "Arkansas"], [6, "California"],
+  [8, "Colorado"], [9, "Connecticut"], [10, "Delaware"], [11, "District of Columbia"],
+  [12, "Florida"], [13, "Georgia"], [15, "Hawaii"], [16, "Idaho"], [17, "Illinois"],
+  [18, "Indiana"], [19, "Iowa"], [20, "Kansas"], [21, "Kentucky"], [22, "Louisiana"],
+  [23, "Maine"], [24, "Maryland"], [25, "Massachusetts"], [26, "Michigan"],
+  [27, "Minnesota"], [28, "Mississippi"], [29, "Missouri"], [30, "Montana"],
+  [31, "Nebraska"], [32, "Nevada"], [33, "New Hampshire"], [34, "New Jersey"],
+  [35, "New Mexico"], [36, "New York"], [37, "North Carolina"], [38, "North Dakota"],
+  [39, "Ohio"], [40, "Oklahoma"], [41, "Oregon"], [42, "Pennsylvania"], [44, "Rhode Island"],
+  [45, "South Carolina"], [46, "South Dakota"], [47, "Tennessee"], [48, "Texas"],
+  [49, "Utah"], [50, "Vermont"], [51, "Virginia"], [53, "Washington"], [54, "West Virginia"],
+  [55, "Wisconsin"], [56, "Wyoming"]
+]);
+
 const projection = d3.geoAlbersUsa()
   .scale(1000)
   .translate([width / 2, height / 2]);
@@ -20,10 +36,12 @@ async function scene1() {
   backButton.style("display", "none");
 
   try {
-    const [us, gdpData] = await Promise.all([
-      d3.json("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"),
+    const [usTopo, gdpData] = await Promise.all([
+      d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"),
       d3.json("state_gdp_2024.json")
     ]);
+
+    const states = topojson.feature(usTopo, usTopo.objects.states).features;
 
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
 
@@ -33,27 +51,32 @@ async function scene1() {
 
     svg.append("g")
       .selectAll("path")
-      .data(us.features)
+      .data(states)
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
-        const gdp = gdpMap.get(d.properties.name.trim());
+        const stateName = stateNameMap.get(d.id);
+        const gdp = gdpMap.get(stateName);
         return gdp ? color(gdp) : "#eee";
       })
       .attr("stroke", "#999")
       .on("mousemove", (event, d) => {
-        const gdp = gdpMap.get(d.properties.name.trim());
+        const stateName = stateNameMap.get(d.id);
+        const gdp = gdpMap.get(stateName);
         tooltip
           .style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY + 10) + "px")
           .html(`
-            <strong>${d.properties.name}</strong><br/>
+            <strong>${stateName}</strong><br/>
             GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
           `);
       })
       .on("mouseout", () => tooltip.style("opacity", 0))
-      .on("click", (event, d) => scene2(d.properties.name));
+      .on("click", (event, d) => {
+        const stateName = stateNameMap.get(d.id);
+        scene2(stateName);
+      });
 
   } catch (err) {
     console.error("Error loading Scene 1:", err);
@@ -103,7 +126,7 @@ async function scene2(stateName) {
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .append("title")
-      .text((d, i, nodes) => `${industries[nodes[i].parentNode.__data__.index]}: ${(+d[1] - +d[0]).toFixed(1)} M`);
+      .text((d, i, nodes) => `${industries[nodes[i].parentNode.__data__.index]}: ${(d[1] - d[0]).toFixed(1)} M`);
 
     svg.append("g")
       .attr("transform", `translate(0, ${height - 50})`)
