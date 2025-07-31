@@ -41,7 +41,7 @@ async function scene1() {
 
     svg.append("g")
       .selectAll("path")
-      .data(us.features.filter(d => d.properties.name !== "Virginia"))
+      .data(us.features)
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
