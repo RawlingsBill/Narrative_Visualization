@@ -19,9 +19,9 @@ async function scene1() {
   d3.select("h2").text("Scene 1: U.S. State GDP in 2024");
 
   const [us, gdpData] = await Promise.all([
-    d3.json("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"),
+    d3.json("https://gist.githubusercontent.com/mbostock/4090846/raw/us-states.json"),
     d3.json("state_gdp_2024.json")
-  ]);
+]);
 
   const virginia = us.features.find(d => d.properties.name === "Virginia");
   console.log(virginia);
