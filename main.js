@@ -1,81 +1,79 @@
-let currentScene = 0;
-const svg = d3.select("#viz");
-const width = +svg.attr("width");
-const height = +svg.attr("height");
+const width = 960, height = 600;
+const svg = d3.select("svg");
+const tooltip = d3.select(".tooltip");
+const projection = d3.geoAlbersUsa()
+  .scale(1000)
+  .translate([width / 2, height / 2]);
+const path = d3.geoPath(projection);
 
-const scenes = [scene1, scene2, scene3];
-
+// Clear existing SVG content (useful when switching scenes)
 function clearScene() {
   svg.selectAll("*").remove();
+  tooltip.style("opacity", 0);
 }
 
+// Scene 1: National Overview - Choropleth map of total GDP 2024
 async function scene1() {
   clearScene();
-  d3.select("#subtitle").text("Scene 1: Overview of Global CO₂ Emissions");
+  d3.select("h2").text("Scene 1: U.S. State GDP in 2024");
 
-  const world = await d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson");
-console.log("Loaded countries:", world.features.length);
+  const [us, gdpData] = await Promise.all([
+    d3.json("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"),
+    d3.json("state_gdp_2024.json")
+  ]);
 
-// Use .properties.ISO_A3 directly, no need for idToISO
-svg.append("g")
-  .selectAll("path")
-  .data(world.features)
-  .join("path")
-  .attr("d", path)
-  .attr("fill", d => {
-    const iso = d.properties.ISO_A3;
-    const value = isoMap.get(iso);
-    console.log(`ISO ${iso} → Emissions ${value}`);
-    return value != null ? color(value) : "#ccc";
-  })
-  .attr("stroke", "#fff")
-  .attr("stroke-width", 0.5)
-  .append("title")
-  .text(d => {
-    const iso = d.properties.ISO_A3;
-    const value = isoMap.get(iso);
-    return `${iso ?? "Unknown"}: ${value ? value.toLocaleString() + " MtCO₂" : "No data"}`;
-  });
-function scene2() {
+  const gdpMap = new Map(gdpData.map(d => [d.state, d.gdp_2024]));
+
+  const color = d3.scaleSequential()
+    .domain([0, d3.max(gdpData, d => d.gdp_2024)])
+    .interpolator(d3.interpolateBlues);
+
+  svg.append("g")
+    .selectAll("path")
+    .data(us.features)
+    .join("path")
+    .attr("d", path)
+    .attr("fill", d => {
+      const gdp = gdpMap.get(d.properties.name);
+      return gdp ? color(gdp) : "#eee";
+    })
+    .attr("stroke", "#999")
+    .on("mousemove", (event, d) => {
+      const gdp = gdpMap.get(d.properties.name);
+      tooltip
+        .style("opacity", 1)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY + 10) + "px")
+        .html(`
+          <strong>${d.properties.name}</strong><br/>
+          GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
+        `);
+    })
+    .on("mouseout", () => {
+      tooltip.style("opacity", 0);
+    });
+}
+
+// Scene 2: State Industry Breakdown (placeholder)
+async function scene2(stateName) {
   clearScene();
-  d3.select("#subtitle").text("Scene 2: Emissions Over Time");
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", height / 2)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "24px")
-    .text("[Line chart of CO2 emissions over time]");
+  d3.select("h2").text(`Scene 2: Industry Breakdown for ${stateName}`);
+  // TODO: Add stacked area/bar chart for industries over time for selected state
 }
 
-function scene3() {
+// Scene 3: Compare States (placeholder)
+async function scene3() {
   clearScene();
-  d3.select("#subtitle").text("Scene 3: Per Capita Emissions");
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", height / 2)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "24px")
-    .text("[Bar chart of per capita emissions]");
+  d3.select("h2").text("Scene 3: Compare States");
+  // TODO: Add small multiples bar charts for top 3 sectors by state
 }
 
-function updateScene() {
-  scenes[currentScene]();
+// Scene 4: Unique Economies (placeholder)
+async function scene4() {
+  clearScene();
+  d3.select("h2").text("Scene 4: Unique Economies Highlights");
+  // TODO: Add callouts for states with unique dominant industries
 }
 
-d3.select("#nextBtn").on("click", () => {
-  if (currentScene < scenes.length - 1) {
-    currentScene++;
-    updateScene();
-  }
-});
-
-d3.select("#prevBtn").on("click", () => {
-  if (currentScene > 0) {
-    currentScene--;
-    updateScene();
-  }
-});
-
-// Initialize first scene
-updateScene();
-
+// Start with Scene 1 on page load
+scene1();
