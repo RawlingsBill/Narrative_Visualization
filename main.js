@@ -3,7 +3,13 @@ const svg = d3.select("svg");
 const tooltip = d3.select(".tooltip");
 const backButton = d3.select("#back-button");
 
-// Add this to map state FIPS to names
+const projection = d3.geoAlbersUsa()
+  .scale(1000)
+  .translate([width / 2, height / 2]);
+
+const path = d3.geoPath(projection);
+
+// Map from FIPS code (number) to state name
 const stateNameMap = new Map([
   [1, "Alabama"], [2, "Alaska"], [4, "Arizona"], [5, "Arkansas"], [6, "California"],
   [8, "Colorado"], [9, "Connecticut"], [10, "Delaware"], [11, "District of Columbia"],
@@ -18,12 +24,6 @@ const stateNameMap = new Map([
   [49, "Utah"], [50, "Vermont"], [51, "Virginia"], [53, "Washington"], [54, "West Virginia"],
   [55, "Wisconsin"], [56, "Wyoming"]
 ]);
-
-const projection = d3.geoAlbersUsa()
-  .scale(1000)
-  .translate([width / 2, height / 2]);
-
-const path = d3.geoPath(projection);
 
 function clearScene() {
   svg.selectAll("*").remove();
@@ -43,7 +43,11 @@ async function scene1() {
 
     const states = topojson.feature(usTopo, usTopo.objects.states).features;
 
+    // Build GDP lookup by state name
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
+
+    // Log GDP map for verification
+    console.log("GDP Data Map:", gdpMap);
 
     const color = d3.scaleSequential()
       .domain([0, d3.max(gdpData, d => d.gdp_2024)])
@@ -55,27 +59,28 @@ async function scene1() {
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
-        const stateName = stateNameMap.get(d.id);
+        const stateName = stateNameMap.get(+d.id);
         const gdp = gdpMap.get(stateName);
+        console.log(`FIPS ${d.id} → ${stateName} → GDP: ${gdp}`);
         return gdp ? color(gdp) : "#eee";
       })
       .attr("stroke", "#999")
       .on("mousemove", (event, d) => {
-        const stateName = stateNameMap.get(d.id);
+        const stateName = stateNameMap.get(+d.id);
         const gdp = gdpMap.get(stateName);
         tooltip
           .style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY + 10) + "px")
           .html(`
-            <strong>${stateName}</strong><br/>
+            <strong>${stateName ?? "Unknown"}</strong><br/>
             GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
           `);
       })
       .on("mouseout", () => tooltip.style("opacity", 0))
       .on("click", (event, d) => {
-        const stateName = stateNameMap.get(d.id);
-        scene2(stateName);
+        const stateName = stateNameMap.get(+d.id);
+        if (stateName) scene2(stateName);
       });
 
   } catch (err) {
