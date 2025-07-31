@@ -56,7 +56,7 @@ async function scene1() {
       })
       .attr("stroke", "#999")
       .on("mousemove", (event, d) => {
-        const gdp = gdpMap.get(d.properties.name);
+        const gdp = gdpMap.get(d.properties.name.trim());
         tooltip
           .style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
@@ -66,6 +66,7 @@ async function scene1() {
             GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
           `);
       })
+
       .on("mouseout", () => {
         tooltip.style("opacity", 0);
       });
