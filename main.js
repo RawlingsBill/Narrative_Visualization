@@ -23,6 +23,10 @@ async function scene1() {
       d3.json("state_gdp_2024.json")
     ]);
 
+    const projection = d3.geoAlbersUsa()
+      .scale(1000)
+      .translate([width / 2, height / 2]);
+
     const gdpMap = new Map(gdpData.map(d => [d.state, d.gdp_2024]));
 
     const color = d3.scaleSequential()
