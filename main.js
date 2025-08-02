@@ -192,8 +192,95 @@ async function scene2(state) {
       .text(industry)
       .style("font-size", "12px");
   });
+
+    // Add Deep Dive button
+  svg.append("text")
+    .attr("id", "deep-dive-button")
+    .attr("x", width + margin.left + 10)
+    .attr("y", height + margin.top - 10)
+    .attr("fill", "#007acc")
+    .attr("font-size", "14px")
+    .attr("font-weight", "bold")
+    .attr("cursor", "pointer")
+    .text("Deep Dive: Top 5 Industries")
+    .on("click", () => scene3(state));
 }
 
+async function scene3(state) {
+  clearScene();
+  d3.select("h2").text(`Scene 3: ${state} – Top 5 Industries Over Time`);
+  backButton.style("display", "inline-block").on("click", () => scene2(state));
+
+  try {
+    const raw = await d3.json("state_industry_gdp_long.json");
+
+    const filtered = raw.filter(d => d.state === state && d.industry !== "All industry total");
+    const latestYear = 2024;
+    const topIndustries = Array.from(
+      d3.rollup(
+        filtered.filter(d => d.year === latestYear),
+        v => d3.sum(v, d => d.gdp),
+        d => d.industry
+      )
+    ).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([key]) => key);
+
+    const years = d3.range(2013, 2025);
+    const stateData = filtered.filter(d => topIndustries.includes(d.industry));
+    const nested = d3.groups(stateData, d => d.year);
+    const stackedData = nested.map(([year, entries]) => {
+      const row = { year: +year };
+      topIndustries.forEach(ind => row[ind] = 0);
+      entries.forEach(d => row[d.industry] = d.gdp);
+      return row;
+    });
+
+    const stack = d3.stack().keys(topIndustries).offset(d3.stackOffsetNone);
+    const series = stack(stackedData);
+
+    const margin = { top: 40, right: 180, bottom: 40, left: 60 };
+    const widthAdj = width - margin.left - margin.right;
+    const heightAdj = height - margin.top - margin.bottom;
+
+    svg.attr("width", width).attr("height", height);
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear().domain(d3.extent(years)).range([0, widthAdj]);
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(series, s => d3.max(s, d => d[1]))])
+      .nice()
+      .range([heightAdj, 0]);
+
+    const color = d3.scaleOrdinal().domain(topIndustries).range(d3.schemeTableau10);
+
+    const area = d3.area()
+      .x(d => x(d.data.year))
+      .y0(d => y(d[0]))
+      .y1(d => y(d[1]));
+
+    g.selectAll("path")
+      .data(series)
+      .join("path")
+      .attr("fill", d => color(d.key))
+      .attr("d", area)
+      .append("title")
+      .text(d =>
+        `${d.key}: ${d3.sum(d, seg => seg[1] - seg[0]).toLocaleString()} M total`
+      );
+
+    g.append("g").attr("transform", `translate(0,${heightAdj})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+    g.append("g").call(d3.axisLeft(y));
+
+    const legend = svg.append("g").attr("transform", `translate(${width - 160},${margin.top})`);
+    topIndustries.forEach((ind, i) => {
+      const row = legend.append("g").attr("transform", `translate(0,${i * 20})`);
+      row.append("rect").attr("width", 12).attr("height", 12).attr("fill", color(ind));
+      row.append("text").attr("x", 18).attr("y", 10).text(ind).style("font-size", "12px");
+    });
+
+  } catch (err) {
+    console.error("Error loading Scene 3:", err);
+  }
+}
 
 backButton.on("click", () => scene1());
 scene1();
