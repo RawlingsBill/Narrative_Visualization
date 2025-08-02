@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>US GDP by State</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <style>
     body {
@@ -25,38 +26,24 @@
       display: block;
       margin: auto;
     }
-    #button-container {
-      text-align: center;
-      margin-top: 20px;
-    }
-    #button-container button {
-      margin: 0 10px;
-      padding: 10px 16px;
-      font-size: 14px;
-      border: 1px solid #444;
-      border-radius: 4px;
-      cursor: pointer;
-      background-color: white;
-      color: #333;
-      box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-    }
-    #button-container button:hover {
-      background-color: #f0f0f0;
+    #back-button {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
   <h2 style="text-align: center">Scene 1: U.S. State GDP in 2024</h2>
-  
   <svg></svg>
-  
-  <div id="button-container">
-    <button id="back-button" style="display: none;">Back</button>
-    <button id="deep-dive-button" style="display: none;">Focus: Top 5 Industries</button>
+  <div id="button-container" style="text-align: center; margin-top: 20px;">
+  <button id="back-button" style="display: none;">Back</button>
+  <button id="deep-dive-button" style="display: none;">Focus: Top 5 Industries</button>
   </div>
-
+  <div id="chart" style="min-height: 400px;"></div>
   <div class="tooltip"></div>
-
+  <button id="back-button">Back</button>
   <script src="main.js"></script>
 </body>
 </html>
