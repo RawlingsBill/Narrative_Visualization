@@ -159,24 +159,20 @@ async function scene2(state) {
       return isNaN(h) ? 0 : h;
     })
     .attr("width", x.bandwidth())
-    .selectAll("rect")
-    .data(d => d.layer.map((v, i) => ({ ...v, industry: d.industry })))  // Bind industry explicitly
-    .join("rect")
-    .attr("x", d => x(d.data.year))
-    .attr("y", d => y(d[1]))
-    .attr("height", d => {
-      const h = y(d[0]) - y(d[1]);
-      return isNaN(h) ? 0 : h;
-    })
-    .attr("width", x.bandwidth())
     .append("title")
-    .text(d => {
-      const industry = d.industry ?? "UNKNOWN";
-      const year = d.data.year;
+    .text(function(d, i, nodes) {
+      const parent = d3.select(nodes[i].parentNode);
+      const boundData = parent.datum();
+    
+      console.log("🔍 Tooltip Debug — boundData:", boundData);
+      console.log("🔍 Tooltip Debug — d:", d);
+    
+      const industry = boundData?.key ?? "UNKNOWN";
+      const year = d.data?.year ?? "????";
       const value = d[1] - d[0];
+    
       return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
     });
-
 
 
   // Axes
