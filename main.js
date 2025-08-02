@@ -85,6 +85,7 @@ async function scene1() {
 
 async function scene2(stateName) {
   d3.select("h2").text(`GDP Breakdown for ${stateName}`);
+  d3.select("svg").remove();
   d3.select("#chart").html(""); // Clear previous chart
 
   const raw = await d3.csv("GDP_2013-2024.csv");
