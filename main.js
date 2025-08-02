@@ -162,11 +162,12 @@ async function scene2(state) {
     .attr("width", x.bandwidth())
     .append("title")
     .text(function(d) {
-      const industry = d3.select(this.parentNode).datum().key;
+      const industry = d3.select(this.parentNode).datum().industry;  // <== FIXED HERE
       const year = d.data.year;
       const value = d[1] - d[0];
       return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
     });
+
 
   // Axes
   g.append("g")
