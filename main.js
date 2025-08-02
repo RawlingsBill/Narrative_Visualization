@@ -88,9 +88,13 @@ async function scene2(stateName) {
   try {
     const raw = await d3.json("state_industry_gdp_long.json");
 
-    // Filter by state and exclude overall total
+    // Normalize input for case/space mismatches
+    const normalizedState = stateName.trim().toLowerCase();
+
+    // Filter for selected state and exclude totals
     const filtered = raw.filter(d =>
-      d.state === stateName && d.industry !== "All industry total"
+      d.state.trim().toLowerCase() === normalizedState &&
+      d.industry !== "All industry total"
     );
 
     if (filtered.length === 0) {
@@ -98,25 +102,31 @@ async function scene2(stateName) {
         .attr("x", width / 2)
         .attr("y", height / 2)
         .attr("text-anchor", "middle")
+        .attr("fill", "#333")
         .text(`No industry GDP data available for ${stateName}`);
       return;
     }
 
-    const years = [...new Set(filtered.map(d => d.year))].sort((a, b) => a - b);
+    const years = [...new Set(filtered.map(d => +d.year))].sort((a, b) => a - b);
     const industries = [...new Set(filtered.map(d => d.industry))];
     const grouped = d3.group(filtered, d => d.industry);
 
-    const stackedInput = industries.map(industry => {
-      const values = Object.fromEntries(years.map(year => [year, 0]));
-      for (const entry of grouped.get(industry) || []) {
-        values[entry.year] = entry.gdp;
+    // Structure: [{ industry: "Agriculture", 2013: 100, 2014: 105, ... }, ...]
+    const stackedInput = industries.map(ind => {
+      const row = { industry: ind };
+      years.forEach(year => {
+        row[year] = 0;
+      });
+      for (const entry of grouped.get(ind) || []) {
+        row[entry.year] = +entry.gdp;
       }
-      return { industry, ...values };
+      return row;
     });
 
     const stackedData = d3.stack()
       .keys(years)
-      .value((d, key) => d[key])(stackedInput);
+      .value((d, key) => d[key] || 0)
+      (stackedInput);
 
     const x = d3.scaleBand()
       .domain(years)
@@ -124,13 +134,13 @@ async function scene2(stateName) {
       .padding(0.1);
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(stackedData[stackedData.length - 1], d => d[1])])
+      .domain([0, d3.max(stackedData[stackedData.length - 1], d => d[1]) || 1])
       .nice()
       .range([height - 50, 20]);
 
     const color = d3.scaleOrdinal()
       .domain(industries)
-      .range(d3.schemeTableau10.concat(d3.schemeSet3)); // more colors if needed
+      .range(d3.schemeTableau10.concat(d3.schemeSet3)); // Supports more than 10 industries
 
     svg.selectAll("g.layer")
       .data(stackedData)
@@ -159,19 +169,35 @@ async function scene2(stateName) {
       .attr("transform", `translate(60, 0)`)
       .call(d3.axisLeft(y));
 
+    // Legend
     const legend = svg.append("g")
       .attr("transform", `translate(${width - 200}, 20)`);
 
     industries.forEach((ind, i) => {
-      const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
-      g.append("rect").attr("width", 12).attr("height", 12).attr("fill", color(ind));
-      g.append("text").attr("x", 18).attr("y", 10).text(ind);
+      const g = legend.append("g")
+        .attr("transform", `translate(0, ${i * 20})`);
+      g.append("rect")
+        .attr("width", 12)
+        .attr("height", 12)
+        .attr("fill", color(ind));
+      g.append("text")
+        .attr("x", 18)
+        .attr("y", 10)
+        .text(ind);
     });
 
   } catch (err) {
     console.error("Error loading Scene 2:", err);
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2)
+      .attr("text-anchor", "middle")
+      .attr("fill", "red")
+      .text("Error loading industry data.");
   }
 }
+
+
 
 backButton.on("click", () => scene1());
 scene1();
