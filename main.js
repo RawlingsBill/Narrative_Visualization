@@ -203,7 +203,7 @@ async function scene2(state) {
 
 const deepDiveButton = d3.select("#deep-dive-button");
 deepDiveButton.style("display", "inline-block")
-  .text("🔍 Deep Dive: Top 5 Industries")
+  .text("Focus: Top 5 Industries")
   .on("click", () => scene3(state));
 }
 
@@ -211,7 +211,7 @@ async function scene3(state) {
   clearScene();
   d3.select("h2").text(`Scene 3: ${state} – Top 5 Industries Over Time`);
   backButton.style("display", "inline-block")
-  .text("🔙 Back to Industry View")
+  .text("Back")
   .on("click", () => scene2(state))
 
   try {
