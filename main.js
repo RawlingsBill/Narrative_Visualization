@@ -195,15 +195,15 @@ async function scene2(state) {
 
     // Add Deep Dive button
   svg.append("text")
-    .attr("id", "deep-dive-button")
-    .attr("x", width + margin.left + 10)
-    .attr("y", height + margin.top - 10)
-    .attr("fill", "#007acc")
-    .attr("font-size", "14px")
-    .attr("font-weight", "bold")
-    .attr("cursor", "pointer")
-    .text("Deep Dive: Top 5 Industries")
-    .on("click", () => scene3(state));
+  .attr("id", "deep-dive-button")
+  .attr("x", margin.left + 20)
+  .attr("y", height - 10)
+  .attr("fill", "#007acc")
+  .attr("font-size", "14px")
+  .attr("font-weight", "bold")
+  .attr("cursor", "pointer")
+  .text("🔍 Deep Dive: Top 5 Industries")
+  .on("click", () => scene3(state));
 }
 
 async function scene3(state) {
