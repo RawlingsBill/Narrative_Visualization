@@ -42,7 +42,6 @@ async function scene1() {
     ]);
 
     const states = topojson.feature(usTopo, usTopo.objects.states).features;
-
     const gdpMap = new Map(gdpData.map(d => [d.state.trim(), d.gdp_2024]));
 
     const color = d3.scaleSequential()
@@ -67,9 +66,8 @@ async function scene1() {
           .style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY + 10) + "px")
-          .html('<strong> ${stateName ?? "Unknown"}</strong><br/>
-            GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}'
-          );
+          .html(`<strong>${stateName ?? "Unknown"}</strong><br/>
+                 GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}`);
       })
       .on("mouseout", () => tooltip.style("opacity", 0))
       .on("click", (event, d) => {
@@ -84,7 +82,7 @@ async function scene1() {
 
 async function scene2(stateName) {
   clearScene();
-  d3.select("h2").text(Scene 2: ${stateName} - Industry GDP Over Time);
+  d3.select("h2").text(`Scene 2: ${stateName} - Industry GDP Over Time`);
   backButton.style("display", "block");
 
   try {
@@ -126,22 +124,21 @@ async function scene2(stateName) {
       .attr("width", x.bandwidth())
       .append("title")
       .text((d, i, nodes) =>
-        ${industries[nodes[i].parentNode.__data__.index]}: ${(d[1] - d[0]).toFixed(1)} M
-      );
+        `${industries[nodes[i].parentNode.__data__.index]}: ${(d[1] - d[0]).toFixed(1)} M`);
 
     svg.append("g")
-      .attr("transform", translate(0, ${height - 50}))
+      .attr("transform", `translate(0, ${height - 50})`)
       .call(d3.axisBottom(x));
 
     svg.append("g")
-      .attr("transform", translate(60, 0))
+      .attr("transform", `translate(60, 0)`)
       .call(d3.axisLeft(y));
 
     const legend = svg.append("g")
-      .attr("transform", translate(${width - 200}, 20));
+      .attr("transform", `translate(${width - 200}, 20)`);
 
     industries.forEach((ind, i) => {
-      const g = legend.append("g").attr("transform", translate(0, ${i * 20}));
+      const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
       g.append("rect").attr("width", 12).attr("height", 12).attr("fill", color(ind));
       g.append("text").attr("x", 18).attr("y", 10).text(ind);
     });
@@ -152,5 +149,4 @@ async function scene2(stateName) {
 }
 
 backButton.on("click", () => scene1());
-
 scene1();
