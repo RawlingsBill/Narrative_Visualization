@@ -194,7 +194,7 @@ async function scene2(state) {
   });
 
   backButton.style("display", "inline-block")
-    .text("🔙 Back to Map")
+    .text("Back to Map")
     .on("click", () => {
       backButton.style("display", "none");
       deepDiveButton.style("display", "none");
