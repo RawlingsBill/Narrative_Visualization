@@ -84,72 +84,113 @@ async function scene1() {
 }
 
 async function scene2(stateName) {
-  clearScene();
-  d3.select("h2").text(`Scene 2: ${stateName} - Industry GDP Over Time`);
-  backButton.style("display", "block");
+  d3.select("h2").text(`GDP Breakdown for ${stateName}`);
+  d3.select("#chart").html(""); // Clear previous chart
 
-  try {
-    const raw = await d3.csv("state_gdp_by_industry.csv");
-    const filtered = raw.filter(d => d.GeoName.trim() === stateName && d.LineCode !== "1");
-    const years = Object.keys(filtered[0]).filter(k => /^20\d{2}$/.test(k));
+  const raw = await d3.csv("GDP_2013-2024.csv");
 
-    const stackedData = d3.stack()
-      .keys(years)
-      .value((d, key) => +d[key])(filtered);
+  const years = Object.keys(raw[0]).filter(k => /^20\d{2}$/.test(k));
+  
+  // Filter rows for selected state & exclude "All industry total"
+  const filtered = raw.filter(d =>
+    d.GeoName.trim().toLowerCase() === stateName.toLowerCase() &&
+    d.LineCode !== "1"
+  );
 
-    const industries = filtered.map(d => d.Description.trim());
-
-    const x = d3.scaleBand()
-      .domain(years)
-      .range([60, width - 20])
-      .padding(0.1);
-
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(stackedData[stackedData.length - 1], d => d[1])])
-      .range([height - 50, 20]);
-
-    const color = d3.scaleOrdinal()
-      .domain(industries)
-      .range(d3.schemeTableau10);
-
-    const groups = svg.selectAll("g.layer")
-      .data(stackedData)
-      .join("g")
-      .attr("class", "layer")
-      .attr("fill", (d, i) => color(filtered[i].Description.trim()));
-
-    groups.selectAll("rect")
-      .data(d => d)
-      .join("rect")
-      .attr("x", (d, i) => x(years[i]))
-      .attr("y", d => y(d[1]))
-      .attr("height", d => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth())
-      .append("title")
-      .text((d, i, nodes) =>
-        `${industries[nodes[i].parentNode.__data__.index]}: ${(d[1] - d[0]).toFixed(1)} M`
-      );
-
-    svg.append("g")
-      .attr("transform", `translate(0, ${height - 50})`)
-      .call(d3.axisBottom(x));
-
-    svg.append("g")
-      .attr("transform", `translate(60, 0)`)
-      .call(d3.axisLeft(y));
-
-    const legend = svg.append("g")
-      .attr("transform", `translate(${width - 200}, 20)`);
-
-    industries.forEach((ind, i) => {
-      const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
-      g.append("rect").attr("width", 12).attr("height", 12).attr("fill", color(ind));
-      g.append("text").attr("x", 18).attr("y", 10).text(ind);
-    });
-
-  } catch (err) {
-    console.error("Error loading Scene 2:", err);
+  if (filtered.length === 0) {
+    d3.select("#chart").append("p").text("No data found for " + stateName);
+    return;
   }
+
+  // Convert rows into objects suitable for stacking
+  const industryData = filtered.map(d => {
+    const result = { industry: d.Description.trim() };
+    years.forEach(year => {
+      const val = d[year].replace("(NA)", "").trim();
+      result[year] = val === "" ? 0 : +val;
+    });
+    return result;
+  });
+
+  const stack = d3.stack()
+    .keys(years)
+    .order(d3.stackOrderNone)
+    .offset(d3.stackOffsetNone);
+
+  const stackedData = stack(industryData);
+
+  // Create chart
+  const width = 800;
+  const height = 400;
+  const margin = { top: 50, right: 30, bottom: 50, left: 80 };
+
+  const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const x = d3.scaleBand()
+    .domain(years)
+    .range([margin.left, width - margin.right])
+    .padding(0.1);
+
+  const y = d3.scaleLinear()
+    .domain([
+      0,
+      d3.max(stackedData, layer =>
+        d3.max(layer, d => d[1])
+      )
+    ])
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+
+  const color = d3.scaleOrdinal()
+    .domain(industryData.map(d => d.industry))
+    .range(d3.schemeCategory10);
+
+  svg.append("g")
+    .selectAll("g")
+    .data(stackedData)
+    .join("g")
+    .attr("fill", (d, i) => color(d.key))
+    .selectAll("rect")
+    .data(d => d)
+    .join("rect")
+    .attr("x", (d, i) => x(years[i]))
+    .attr("y", d => y(d[1]))
+    .attr("height", d => y(d[0]) - y(d[1]))
+    .attr("width", x.bandwidth());
+
+  svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x));
+
+  svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y));
+
+  // Add industry labels
+  const legend = svg.append("g")
+    .attr("transform", `translate(${width - margin.right - 150}, ${margin.top})`);
+
+  industryData.forEach((d, i) => {
+    const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
+    g.append("rect").attr("width", 15).attr("height", 15).attr("fill", color(d.industry));
+    g.append("text")
+      .attr("x", 20)
+      .attr("y", 12)
+      .text(d.industry)
+      .style("font-size", "12px");
+  });
+
+  // Add back button
+  d3.select("#chart").append("button")
+    .text("← Back to Map")
+    .on("click", () => {
+      d3.select("#chart").html("");
+      d3.select("h2").text("U.S. State GDP by Industry (2024)");
+      scene1();
+    });
 }
 
 backButton.on("click", () => scene1());
