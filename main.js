@@ -154,7 +154,12 @@ async function scene2(state) {
     .attr("height", d => y(d[0]) - y(d[1]))
     .attr("width", x.bandwidth())
     .append("title")
-    .text(d => `${d.data.year}: $${(d[1] - d[0]).toLocaleString()} M`);
+    .text(function(d, i, nodes) {
+      const industry = d3.select(this.parentNode).datum().key;
+      const year = d.data.year;
+      const value = d[1] - d[0];
+      return `${industry}\n${year}: $${value.toLocaleString(undefined, {maximumFractionDigits: 1})} M`;
+});
 
   // X Axis
   g.append("g")
