@@ -161,12 +161,18 @@ async function scene2(state) {
     .attr("width", x.bandwidth())
     .append("title")
     .text(function(d, i, nodes) {
-      const industry = d3.select(nodes[i].parentNode).datum().key;
-      const year = d.data.year;
+      const parent = d3.select(nodes[i].parentNode);
+      const boundData = parent.datum();
+    
+      console.log("🔍 Tooltip Debug — boundData:", boundData);
+      console.log("🔍 Tooltip Debug — d:", d);
+    
+      const industry = boundData?.key ?? "UNKNOWN";
+      const year = d.data?.year ?? "????";
       const value = d[1] - d[0];
+    
       return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
     });
-
 
 
   // Axes
