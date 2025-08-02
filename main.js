@@ -193,20 +193,12 @@ async function scene2(state) {
       .style("font-size", "12px");
   });
 
-  document.getElementById("back-button").style.display = "inline-block";
-document.getElementById("back-button").innerText = "Back";
-document.getElementById("back-button").onclick = () => {
-  document.getElementById("back-button").style.display = "none";
-  document.getElementById("deep-dive-button").style.display = "none";
-  scene1();
-};
-
-document.getElementById("deep-dive-button").style.display = "inline-block";
-document.getElementById("deep-dive-button").innerText = "Focus: Top 5 Industries";
-document.getElementById("deep-dive-button").onclick = () => scene3(state);
-
-
-      
+  backButton.style("display", "inline-block")
+    .text("🔙 Back to Map")
+    .on("click", () => {
+      backButton.style("display", "none");
+      deepDiveButton.style("display", "none");
+      scene1();
   });
 
 const deepDiveButton = d3.select("#deep-dive-button");
@@ -218,17 +210,12 @@ deepDiveButton.style("display", "inline-block")
 async function scene3(state) {
   clearScene();
   d3.select("h2").text(`Scene 3: ${state} – Top 5 Industries Over Time`);
-  document.getElementById("back-button").style.display = "inline-block";
-  document.getElementById("back-button").innerText = "Back";
-  document.getElementById("back-button").onclick = () => {
-  document.getElementById("back-button").style.display = "none";
-  document.getElementById("deep-dive-button").style.display = "none";
-  scene2(state);
-};
+  backButton.style("display", "inline-block")
+  .text("🔙 Back to Industry View")
+  .on("click", () => scene2(state));
 
-  document.getElementById("deep-dive-button").style.display = "inline-block";
-  document.getElementById("deep-dive-button").innerText = "Focus: Top 5 Industries";
-  document.getElementById("deep-dive-button").onclick = () => scene3(state);
+  deepDiveButton.style("display", "none");
+
   try {
     const raw = await d3.json("state_industry_gdp_long.json");
 
