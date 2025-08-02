@@ -84,95 +84,101 @@ async function scene1() {
 async function scene2(state) {
   clearScene();
   d3.select("h2").text(`Scene 2: ${state} GDP by Industry Over Time`);
+  backButton.style("display", "inline-block").on("click", () => {
+    backButton.style("display", "none");
+    scene1();
+  });
 
-  d3.select("#back-button")
-    .style("display", "inline-block")
-    .on("click", () => {
-      d3.select("#back-button").style("display", "none");
-      scene1();
-    });
+  const raw = await d3.json("state_industry_gdp_long.json");
 
-  const data = await d3.json("state_industry_gdp_long.json");
+  const stateData = raw.filter(d =>
+    d.state === state && d.industry !== "All industry total"
+  );
 
-  const stateData = data.filter(d => d.state === state && d.industry !== "All industry total");
+  if (stateData.length === 0) {
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height / 2)
+      .attr("text-anchor", "middle")
+      .text(`No data available for ${state}`);
+    return;
+  }
 
-  // Pivot data for stacking
-  const nested = d3.groups(stateData, d => d.year);
-  const stackedData = nested.map(([year, entries]) => {
-    const obj = { year: +year };
-    entries.forEach(d => {
-      obj[d.industry] = d.gdp;
-    });
+  // Prepare pivoted stacked data
+  const years = [...new Set(stateData.map(d => +d.year))].sort((a, b) => a - b);
+  const industries = [...new Set(stateData.map(d => d.industry))];
+
+  const dataByYear = d3.groups(stateData, d => +d.year);
+  const stackedData = dataByYear.map(([year, entries]) => {
+    const obj = { year };
+    industries.forEach(ind => obj[ind] = 0); // fill missing with 0
+    entries.forEach(d => obj[d.industry] = +d.gdp || 0);
     return obj;
   });
 
-  const industries = Array.from(new Set(stateData.map(d => d.industry)));
-
   const stack = d3.stack()
     .keys(industries)
-    .order(d3.stackOrderNone)
-    .offset(d3.stackOffsetNone);
+    .offset(d3.stackOffsetNone); // Change to d3.stackOffsetExpand for percent chart
 
   const series = stack(stackedData);
 
-  const margin = { top: 40, right: 150, bottom: 40, left: 60 };
-  const width = 960 - margin.left - margin.right;
-  const height = 500 - margin.top - margin.bottom;
+  // Dimensions
+  const margin = { top: 40, right: 180, bottom: 40, left: 60 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
-  const svg = d3.select("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
-
+  // Clear and reset SVG
+  svg.attr("width", width).attr("height", height);
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
   const x = d3.scaleBand()
-    .domain(stackedData.map(d => d.year))
-    .range([0, width])
+    .domain(years)
+    .range([0, innerWidth])
     .padding(0.2);
 
   const y = d3.scaleLinear()
-    .domain([0, d3.max(stackedData, d =>
-      d3.sum(industries, k => d[k] || 0)
-    )])
+    .domain([0, d3.max(stackedData, d => d3.sum(industries, k => d[k] || 0))])
     .nice()
-    .range([height, 0]);
+    .range([innerHeight, 0]);
 
   const color = d3.scaleOrdinal()
     .domain(industries)
-    .range(d3.schemeCategory10);
+    .range(d3.schemeTableau10.concat(d3.schemeSet3));
 
-  g.append("g")
-    .selectAll("g")
-    .data(series)
+  g.selectAll("g.layer")
+    .data(series.map((layer, i) => ({ layer, industry: industries[i] })))
     .join("g")
-    .attr("fill", d => color(d.key))
+    .attr("class", "layer")
+    .attr("fill", d => color(d.industry))
     .selectAll("rect")
-    .data(d => d)
+    .data(d => d.layer)
     .join("rect")
     .attr("x", d => x(d.data.year))
     .attr("y", d => y(d[1]))
-    .attr("height", d => y(d[0]) - y(d[1]))
+    .attr("height", d => {
+      const h = y(d[0]) - y(d[1]);
+      return isNaN(h) ? 0 : h;
+    })
     .attr("width", x.bandwidth())
     .append("title")
     .text(function(d, i, nodes) {
-      const industry = d3.select(this.parentNode).datum().key;
+      const industry = d3.select(this.parentNode).datum().industry;
       const year = d.data.year;
       const value = d[1] - d[0];
-      return `${industry}\n${year}: $${value.toLocaleString(undefined, {maximumFractionDigits: 1})} M`;
-});
+      return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
+    });
 
-  // X Axis
+  // Axes
   g.append("g")
-    .attr("transform", `translate(0,${height})`)
+    .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
-  // Y Axis
   g.append("g")
     .call(d3.axisLeft(y).ticks(6));
 
   // Legend
   const legend = svg.append("g")
-    .attr("transform", `translate(${width + margin.left + 10}, ${margin.top})`);
+    .attr("transform", `translate(${margin.left + innerWidth + 10}, ${margin.top})`);
 
   industries.forEach((industry, i) => {
     const row = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
