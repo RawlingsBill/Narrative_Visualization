@@ -84,10 +84,23 @@ async function scene1() {
 async function scene2(state) {
   clearScene();
   d3.select("h2").text(`Scene 2: ${state} GDP by Industry Over Time`);
-  backButton.style("display", "inline-block").on("click", () => {
-    backButton.style("display", "none");
-    scene1();
-  });
+
+  const backButton = d3.select("#back-button");
+  const deepDiveButton = d3.select("#deep-dive-button");
+
+  backButton
+    .style("display", "inline-block")
+    .text("Back to Map")
+    .on("click", () => {
+      backButton.style("display", "none");
+      deepDiveButton.style("display", "none");
+      scene1();
+    });
+
+  deepDiveButton
+    .style("display", "inline-block")
+    .text("Focus: Top 5 Industries")
+    .on("click", () => scene3(state));
 
   const raw = await d3.json("state_industry_gdp_long.json");
 
@@ -104,30 +117,27 @@ async function scene2(state) {
     return;
   }
 
-  // Prepare pivoted stacked data
   const years = [...new Set(stateData.map(d => +d.year))].sort((a, b) => a - b);
   const industries = [...new Set(stateData.map(d => d.industry))];
 
   const dataByYear = d3.groups(stateData, d => +d.year);
   const stackedData = dataByYear.map(([year, entries]) => {
     const obj = { year };
-    industries.forEach(ind => obj[ind] = 0); // fill missing with 0
+    industries.forEach(ind => obj[ind] = 0);
     entries.forEach(d => obj[d.industry] = +d.gdp || 0);
     return obj;
   });
 
   const stack = d3.stack()
     .keys(industries)
-    .offset(d3.stackOffsetNone); // Change to d3.stackOffsetExpand for percent chart
+    .offset(d3.stackOffsetNone);
 
   const series = stack(stackedData);
 
-  // Dimensions
   const margin = { top: 40, right: 180, bottom: 40, left: 60 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  // Clear and reset SVG
   svg.attr("width", width).attr("height", height);
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -146,11 +156,15 @@ async function scene2(state) {
     .range(d3.schemeTableau10.concat(d3.schemeSet3));
 
   g.selectAll("g.layer")
-    .data(series)
+    .data(series.map((layer, i) => ({ layer, industry: industries[i] })))
     .join("g")
-    .attr("fill", d => color(d.key))
+    .attr("class", "layer")
+    .attr("fill", d => color(d.industry))
     .selectAll("rect")
-    .data(d => d)
+    .data(d => d.layer.map(segment => ({
+      ...segment,
+      industry: d.industry
+    })))
     .join("rect")
     .attr("x", d => x(d.data.year))
     .attr("y", d => y(d[1]))
@@ -160,22 +174,13 @@ async function scene2(state) {
     })
     .attr("width", x.bandwidth())
     .append("title")
-    .text(function(d, i, nodes) {
-      const parent = d3.select(nodes[i].parentNode);
-      const boundData = parent.datum();
-    
-      console.log("🔍 Tooltip Debug — boundData:", boundData);
-      console.log("🔍 Tooltip Debug — d:", d);
-    
-      const industry = boundData?.key ?? "UNKNOWN";
-      const year = d.data?.year ?? "????";
+    .text(d => {
+      const industry = d.industry ?? "UNKNOWN";
+      const year = d.data.year;
       const value = d[1] - d[0];
-    
       return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
     });
 
-
-  // Axes
   g.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
@@ -183,7 +188,6 @@ async function scene2(state) {
   g.append("g")
     .call(d3.axisLeft(y).ticks(6));
 
-  // Legend
   const legend = svg.append("g")
     .attr("transform", `translate(${margin.left + innerWidth + 10}, ${margin.top})`);
 
@@ -199,19 +203,6 @@ async function scene2(state) {
       .text(industry)
       .style("font-size", "12px");
   });
-
-  backButton.style("display", "inline-block")
-    .text("Back to Map")
-    .on("click", () => {
-      backButton.style("display", "none");
-      deepDiveButton.style("display", "none");
-      scene1();
-  });
-
-const deepDiveButton = d3.select("#deep-dive-button");
-deepDiveButton.style("display", "inline-block")
-  .text("Focus: Top 5 Industries")
-  .on("click", () => scene3(state));
 }
 
 async function scene3(state) {
