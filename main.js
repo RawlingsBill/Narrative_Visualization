@@ -84,6 +84,7 @@ async function scene1() {
 }
 
 async function scene2(stateName) {
+  d3.select("svg").remove();
   // ✅ Update title
   d3.select("h2").text(`GDP Breakdown for ${stateName}`);
 
@@ -98,9 +99,10 @@ async function scene2(stateName) {
   const years = Object.keys(raw[0]).filter(k => /^20\d{2}$/.test(k));
   
   const filtered = raw.filter(d =>
-    d.GeoName.trim().toLowerCase() === stateName.toLowerCase() &&
+    d.GeoName.trim().toLowerCase() === stateName.trim().toLowerCase() &&
     d.LineCode !== "1"
-  );
+);
+  console.log("Filtered industry data:", filtered);
 
   if (filtered.length === 0) {
     d3.select("#chart").append("p").text("No data found for " + stateName);
