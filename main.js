@@ -67,9 +67,8 @@ async function scene1() {
           .style("opacity", 1)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY + 10) + "px")
-          .html(
-            <strong>${stateName ?? "Unknown"}</strong><br/>
-            GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}
+          .html('<strong> ${stateName ?? "Unknown"}</strong><br/>
+            GDP 2024: $${gdp ? gdp.toLocaleString() + " M" : "No data"}'
           );
       })
       .on("mouseout", () => tooltip.style("opacity", 0))
