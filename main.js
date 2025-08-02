@@ -193,15 +193,16 @@ async function scene2(state) {
       .style("font-size", "12px");
   });
 
-    // Add Deep Dive button
-  svg.append("text")
-  .attr("id", "deep-dive-button")
-  .attr("x", margin.left + 20)
-  .attr("y", height - 10)
-  .attr("fill", "#007acc")
-  .attr("font-size", "14px")
-  .attr("font-weight", "bold")
-  .attr("cursor", "pointer")
+  backButton.style("display", "inline-block")
+    .text("🔙 Back to Map")
+    .on("click", () => {
+      backButton.style("display", "none");
+      deepDiveButton.style("display", "none");
+      scene1();
+  });
+
+const deepDiveButton = d3.select("#deep-dive-button");
+deepDiveButton.style("display", "inline-block")
   .text("🔍 Deep Dive: Top 5 Industries")
   .on("click", () => scene3(state));
 }
@@ -209,7 +210,11 @@ async function scene2(state) {
 async function scene3(state) {
   clearScene();
   d3.select("h2").text(`Scene 3: ${state} – Top 5 Industries Over Time`);
-  backButton.style("display", "inline-block").on("click", () => scene2(state));
+  backButton.style("display", "inline-block")
+  .text("🔙 Back to Industry View")
+  .on("click", () => scene2(state));
+
+  deepDiveButton.style("display", "none");
 
   try {
     const raw = await d3.json("state_industry_gdp_long.json");
