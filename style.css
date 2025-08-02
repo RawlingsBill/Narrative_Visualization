@@ -27,6 +27,16 @@ body {
   margin: 20px;
 }
 
+#chart {
+  position: relative;
+  margin-top: 20px;
+}
+
+svg {
+  display: block;
+  margin: auto;
+}
+
 button {
   background-color: #0066cc;
   color: white;
