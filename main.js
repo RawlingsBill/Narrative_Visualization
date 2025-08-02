@@ -86,15 +86,37 @@ async function scene2(stateName) {
   backButton.style("display", "block");
 
   try {
-    const raw = await d3.csv("GDP_2013-2024.csv");
-    const filtered = raw.filter(d => d.GeoName.trim() === stateName && d.LineCode !== "1");
-    const years = Object.keys(filtered[0]).filter(k => /^20\d{2}$/.test(k));
+    const raw = await d3.json("state_industry_gdp_long.json");
+
+    // Filter by state and exclude overall total
+    const filtered = raw.filter(d =>
+      d.state === stateName && d.industry !== "All industry total"
+    );
+
+    if (filtered.length === 0) {
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .text(`No industry GDP data available for ${stateName}`);
+      return;
+    }
+
+    const years = [...new Set(filtered.map(d => d.year))].sort((a, b) => a - b);
+    const industries = [...new Set(filtered.map(d => d.industry))];
+    const grouped = d3.group(filtered, d => d.industry);
+
+    const stackedInput = industries.map(industry => {
+      const values = Object.fromEntries(years.map(year => [year, 0]));
+      for (const entry of grouped.get(industry) || []) {
+        values[entry.year] = entry.gdp;
+      }
+      return { industry, ...values };
+    });
 
     const stackedData = d3.stack()
       .keys(years)
-      .value((d, key) => +d[key])(filtered);
-
-    const industries = filtered.map(d => d.Description.trim());
+      .value((d, key) => d[key])(stackedInput);
 
     const x = d3.scaleBand()
       .domain(years)
@@ -103,32 +125,35 @@ async function scene2(stateName) {
 
     const y = d3.scaleLinear()
       .domain([0, d3.max(stackedData[stackedData.length - 1], d => d[1])])
+      .nice()
       .range([height - 50, 20]);
 
     const color = d3.scaleOrdinal()
       .domain(industries)
-      .range(d3.schemeTableau10);
+      .range(d3.schemeTableau10.concat(d3.schemeSet3)); // more colors if needed
 
-    const groups = svg.selectAll("g.layer")
+    svg.selectAll("g.layer")
       .data(stackedData)
       .join("g")
       .attr("class", "layer")
-      .attr("fill", (d, i) => color(filtered[i].Description.trim()));
-
-    groups.selectAll("rect")
+      .attr("fill", (d, i) => color(stackedInput[i].industry))
+      .selectAll("rect")
       .data(d => d)
       .join("rect")
-      .attr("x", (d, i) => x(years[i]))
+      .attr("x", (d, i) => x(d.data.year))
       .attr("y", d => y(d[1]))
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .append("title")
-      .text((d, i, nodes) =>
-        `${industries[nodes[i].parentNode.__data__.index]}: ${(d[1] - d[0]).toFixed(1)} M`);
+      .text((d, i, nodes) => {
+        const groupIndex = stackedData.findIndex(layer => layer === nodes[i].parentNode.__data__);
+        const industry = stackedInput[groupIndex].industry;
+        return `${industry}: ${(d[1] - d[0]).toFixed(1)} M`;
+      });
 
     svg.append("g")
       .attr("transform", `translate(0, ${height - 50})`)
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
     svg.append("g")
       .attr("transform", `translate(60, 0)`)
