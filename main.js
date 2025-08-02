@@ -84,15 +84,19 @@ async function scene1() {
 }
 
 async function scene2(stateName) {
+  // ✅ Update title
   d3.select("h2").text(`GDP Breakdown for ${stateName}`);
-  d3.select("svg").remove();
-  d3.select("#chart").html(""); // Clear previous chart
+
+  // ✅ Clear original SVG content without deleting the <svg> tag
+  svg.selectAll("*").remove();
+
+  // ✅ Clear previous chart
+  d3.select("#chart").html("");
 
   const raw = await d3.csv("GDP_2013-2024.csv");
 
   const years = Object.keys(raw[0]).filter(k => /^20\d{2}$/.test(k));
   
-  // Filter rows for selected state & exclude "All industry total"
   const filtered = raw.filter(d =>
     d.GeoName.trim().toLowerCase() === stateName.toLowerCase() &&
     d.LineCode !== "1"
@@ -103,7 +107,6 @@ async function scene2(stateName) {
     return;
   }
 
-  // Convert rows into objects suitable for stacking
   const industryData = filtered.map(d => {
     const result = { industry: d.Description.trim() };
     years.forEach(year => {
@@ -120,19 +123,19 @@ async function scene2(stateName) {
 
   const stackedData = stack(industryData);
 
-  // Create chart
-  const width = 800;
-  const height = 400;
+  // ✅ Create NEW SVG inside #chart
+  const chartWidth = 800;
+  const chartHeight = 400;
   const margin = { top: 50, right: 30, bottom: 50, left: 80 };
 
-  const svg = d3.select("#chart")
+  const chartSvg = d3.select("#chart")
     .append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    .attr("width", chartWidth)
+    .attr("height", chartHeight);
 
   const x = d3.scaleBand()
     .domain(years)
-    .range([margin.left, width - margin.right])
+    .range([margin.left, chartWidth - margin.right])
     .padding(0.1);
 
   const y = d3.scaleLinear()
@@ -143,17 +146,17 @@ async function scene2(stateName) {
       )
     ])
     .nice()
-    .range([height - margin.bottom, margin.top]);
+    .range([chartHeight - margin.bottom, margin.top]);
 
   const color = d3.scaleOrdinal()
     .domain(industryData.map(d => d.industry))
     .range(d3.schemeCategory10);
 
-  svg.append("g")
+  chartSvg.append("g")
     .selectAll("g")
     .data(stackedData)
     .join("g")
-    .attr("fill", (d, i) => color(d.key))
+    .attr("fill", (d, i) => color(industryData[i].industry))
     .selectAll("rect")
     .data(d => d)
     .join("rect")
@@ -162,17 +165,17 @@ async function scene2(stateName) {
     .attr("height", d => y(d[0]) - y(d[1]))
     .attr("width", x.bandwidth());
 
-  svg.append("g")
-    .attr("transform", `translate(0,${height - margin.bottom})`)
+  chartSvg.append("g")
+    .attr("transform", `translate(0,${chartHeight - margin.bottom})`)
     .call(d3.axisBottom(x));
 
-  svg.append("g")
+  chartSvg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y));
 
-  // Add industry labels
-  const legend = svg.append("g")
-    .attr("transform", `translate(${width - margin.right - 150}, ${margin.top})`);
+  // ✅ Add legend
+  const legend = chartSvg.append("g")
+    .attr("transform", `translate(${chartWidth - margin.right - 150}, ${margin.top})`);
 
   industryData.forEach((d, i) => {
     const g = legend.append("g").attr("transform", `translate(0, ${i * 20})`);
@@ -184,15 +187,15 @@ async function scene2(stateName) {
       .style("font-size", "12px");
   });
 
-  // Add back button
+  // ✅ Back button
   d3.select("#chart").append("button")
     .text("← Back to Map")
     .on("click", () => {
       d3.select("#chart").html("");
-      d3.select("h2").text("U.S. State GDP by Industry (2024)");
       scene1();
     });
 }
+
 
 backButton.on("click", () => scene1());
 
