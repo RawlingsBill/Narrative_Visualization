@@ -143,23 +143,24 @@ async function scene2(stateName) {
       .range(d3.schemeTableau10.concat(d3.schemeSet3)); // Supports more than 10 industries
 
     svg.selectAll("g.layer")
-      .data(stackedData)
+      .data(stackedData.map((layer, i) => ({layer, industry: stackedInput[i].industry})))
       .join("g")
       .attr("class", "layer")
-      .attr("fill", (d, i) => color(stackedInput[i].industry))
+      .attr("fill", d => color(d.industry))
       .selectAll("rect")
-      .data(d => d)
+      .data(d => d.layer)
       .join("rect")
       .attr("x", (d, i) => x(d.data.year))
       .attr("y", d => y(d[1]))
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .append("title")
-      .text((d, i, nodes) => {
-        const groupIndex = stackedData.findIndex(layer => layer === nodes[i].parentNode.__data__);
-        const industry = stackedInput[groupIndex].industry;
-        return `${industry}: ${(d[1] - d[0]).toFixed(1)} M`;
-      });
+      .text(function(d, i, nodes) {
+    // Safely access the industry from the group (parentNode’s __data__)
+    const industry = d3.select(this.parentNode).datum().industry;
+    return `${industry}: ${(d[1] - d[0]).toFixed(1)} M`;
+  });
+
 
     svg.append("g")
       .attr("transform", `translate(0, ${height - 50})`)
