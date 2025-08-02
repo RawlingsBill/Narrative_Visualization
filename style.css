@@ -32,21 +32,6 @@ body {
   margin-top: 20px;
 }
 
-.nav-button {
-  padding: 10px 20px;
-  font-size: 14px;
-  border: 1px solid #999;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  margin: 0 5px;
-  min-width: 220px; /* ensures consistent width */
-  box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-}
-
-.nav-button:hover {
-  background-color: #f0f0f0;
-}
 
 svg {
   display: block;
