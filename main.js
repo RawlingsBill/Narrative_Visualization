@@ -146,12 +146,11 @@ async function scene2(state) {
     .range(d3.schemeTableau10.concat(d3.schemeSet3));
 
   g.selectAll("g.layer")
-    .data(series.map((layer, i) => ({ layer, industry: industries[i] })))
+    .data(series)
     .join("g")
-    .attr("class", "layer")
-    .attr("fill", d => color(d.industry))
+    .attr("fill", d => color(d.key))
     .selectAll("rect")
-    .data(d => d.layer)
+    .data(d => d)
     .join("rect")
     .attr("x", d => x(d.data.year))
     .attr("y", d => y(d[1]))
@@ -161,12 +160,13 @@ async function scene2(state) {
     })
     .attr("width", x.bandwidth())
     .append("title")
-    .text(function(d) {
-      const industry = d3.select(this.parentNode).datum().industry;  // <== FIXED HERE
+    .text(function(d, i, nodes) {
+      const industry = d3.select(nodes[i].parentNode).datum().key;
       const year = d.data.year;
       const value = d[1] - d[0];
       return `${industry}\n${year}: $${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} M`;
     });
+
 
 
   // Axes
