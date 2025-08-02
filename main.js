@@ -212,9 +212,7 @@ async function scene3(state) {
   d3.select("h2").text(`Scene 3: ${state} – Top 5 Industries Over Time`);
   backButton.style("display", "inline-block")
   .text("🔙 Back to Industry View")
-  .on("click", () => scene2(state));
-
-  deepDiveButton.style("display", "none");
+  .on("click", () => scene2(state))
 
   try {
     const raw = await d3.json("state_industry_gdp_long.json");
