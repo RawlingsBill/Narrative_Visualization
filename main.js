@@ -80,7 +80,6 @@ async function scene1() {
   }
 }
 
-// Scene 2: State Industry Breakdown
 async function scene2(state) {
   clearScene();
   d3.select("h2").text(`Scene 2: ${state} GDP by Industry Over Time`);
